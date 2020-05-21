@@ -1,0 +1,411 @@
+#!python
+
+
+from tkinter import *
+from tkinter import ttk
+import os
+import json
+from datetime import datetime
+from pytz import timezone
+from pytz import all_timezones
+import os.path
+
+
+class Table: 
+    def __init__(self,root,rows,cols,data_list): 
+
+        self.table_container = ttk.Frame(root, width= 500 ,height = universal_height)
+        self.table_container.grid(row=rows,column=cols, sticky=W)
+
+        for i in range(rows): 
+            for j in range(cols): 
+                width = 20 
+                if j==1:
+                    width=50
+                self.e = Entry(self.table_container, width=width, font=("Courier New", 12)) 
+                self.e.grid(row=i, column=j) 
+                self.e.insert(END, data_list[i][j]) 
+
+    def update(self,root,rows,cols,data_list):
+            self.remove()
+            self.table_container = ttk.Frame(root, width= 500 ,height = universal_height)
+            self.table_container.grid(row=rows,column=cols, sticky=W)
+
+            for i in range(rows): 
+                for j in range(cols): 
+                    width = 20 
+                    if j==1:
+                        width=50
+                    self.e = Entry(self.table_container, width=width, font=("Courier New", 12)) 
+                    self.e.grid(row=i, column=j) 
+                    self.e.insert(END, data_list[i][j]) 
+
+    def remove(self):
+        self.table_container.grid_forget()
+
+filename = 'favourite_timezome'
+default_favorites=['Asia/Kolkata','US/Pacific','UTC']
+favorites=[]
+min_favorite='UTC'
+try:  
+    with open(filename, 'r') as f:
+        read_list = f.read().split('\n')
+    for i in read_list:
+        if i and i not in favorites:
+            favorites.append(i)
+except:
+    with open(filename, 'w') as f:
+        f.write('\n'.join(default_favorites))
+    favorites=default_favorites
+
+fmt = "%Y-%m-%d %H:%M:%S.%f %Z%z"
+
+
+def convert():
+    time_zone_value = time_zone.get()
+    now_naive = datetime.now(timezone(time_zone_value))
+    now_naive = now_naive.replace(day=int(d.get()),month=int(m.get()),year=int(y.get()),hour=int(h.get()),minute=int(mi.get()),second=int(se.get()),microsecond=int(ms.get()))
+    print(now_naive.strftime(fmt))
+
+    converted = []
+    sel_indexes = sel_listbox.get(0,"end")
+    for i in sel_indexes:
+        new_time = now_naive.astimezone(timezone(i))
+        new_time_tuple = []
+        new_time_tuple.append(i)
+        new_time_tuple.append(new_time.strftime(fmt))
+        converted.append(new_time_tuple)
+
+    table.update(bottom_page_container,len(converted),len(converted[0]),converted) 
+
+def epoch_convert():
+    time_zone_value = time_zone.get()
+    utc_timestamp = float(ep.get())
+    utc_datetime = datetime.utcfromtimestamp(utc_timestamp)
+    print(utc_datetime)
+
+    converted = []
+    sel_indexes = sel_listbox.get(0,"end")
+    for i in sel_indexes:
+        new_time = utc_datetime.astimezone(timezone(i))
+        new_time_tuple = []
+        new_time_tuple.append(i)
+        new_time_tuple.append(new_time.strftime(fmt))
+        converted.append(new_time_tuple)
+
+    e_table.update(e_bottom_page_container,len(converted),len(converted[0]),converted) 
+
+def autofill():
+    time_zone_value = time_zone.get()
+    now_naive = datetime.now(timezone(time_zone_value))
+    d.delete(0, 'end')
+    d.insert(END, now_naive.day)
+    m.delete(0, 'end')
+    m.insert(END, now_naive.month)
+    y.delete(0, 'end')
+    y.insert(END, now_naive.year)
+    h.delete(0, 'end')
+    h.insert(END, now_naive.hour)
+    mi.delete(0, 'end')
+    mi.insert(END, now_naive.minute)
+    se.delete(0, 'end')
+    se.insert(END, now_naive.second)
+    ms.delete(0, 'end')
+    ms.insert(END, now_naive.microsecond)
+    return now_naive
+
+def e_autofill():
+    now_naive = datetime.now(timezone('UTC'))
+    now_timestamp = now_naive.timestamp()
+    ep.delete(0, 'end')
+    ep.insert(END, now_timestamp)
+    return now_naive
+
+
+def search():
+    data = search_entry.get()
+    search_item=''
+    searched_items = []
+
+    if data:
+        for item in all_timezones:
+            if data.lower() in item.lower():
+                searched_items.append(item)
+
+        if(len(searched_items)>0):
+            listbox.delete(0,'end')
+            for zone in searched_items:
+                listbox.insert(END, zone)
+        else: 
+            print('Item can not be found in the list!')
+    else:
+        listbox.delete(0,'end')
+        for zone in all_timezones:
+            listbox.insert(END, zone)
+        
+
+def add():
+    indexes = listbox.curselection()
+    sel_indexes = sel_listbox.get(0,"end")
+    for i in indexes:
+        cur = listbox.get(i)
+        print(cur)
+        if cur not in sel_indexes:
+            sel_listbox.insert(END, cur)
+    listbox.selection_clear(0, 'end')
+    print()
+    updateSelectedIndexlist()
+
+
+def subtract():
+    indexes = sel_listbox.curselection()
+    for i in indexes[::-1]:
+        sel_listbox.delete(i)
+    sel_indexes = sel_listbox.get(0,"end")
+    sel_indexes_list = list(sel_indexes)
+    if(not sel_indexes_list):
+        sel_listbox.insert(END, min_favorite)
+    updateSelectedIndexlist()
+
+
+def updateSelectedIndexlist():
+    sel_indexes = sel_listbox.get(0,"end")
+    sel_indexes_list = list(sel_indexes)
+    print(sel_indexes_list)
+    with open(filename, 'w') as f:
+        f.write('\n'.join(sel_indexes_list))
+
+    menu = zoneMenu["menu"]
+    menu.delete(0, "end")
+    for i in sel_indexes_list:
+        menu.add_command(label=i, 
+                        command=lambda value=i: on_option_change(value))
+
+    menu = e_zoneMenu["menu"]
+    menu.delete(0, "end")
+    for i in sel_indexes_list:
+        menu.add_command(label=i, 
+                        command=lambda value=i: on_option_change_e(value))
+
+    
+def on_option_change(value):
+    time_zone.set(value)
+    return
+
+def on_option_change_e(value):
+    e_time_zone.set(value)
+    return
+
+    
+####
+
+#Initialise Tkinter for the UI
+
+####
+
+root = Tk()
+root.resizable(width=False, height=False)
+root.title("Time Converter")
+universal_height = 500
+universal_width = 500
+
+nb = ttk.Notebook(root)
+nb.grid(row=0)
+
+
+####
+
+#main_page
+
+####
+
+
+main_page = ttk.Frame(nb, width= 500 ,height = universal_height)
+nb.add(main_page,text="Main")
+
+top_page_container = ttk.Frame(main_page, width= 500 ,height = universal_height)
+top_page_container.grid(row=1,column=1, sticky=W)
+
+timeZones = favorites
+time_zone = StringVar()
+time_zone.set(favorites[0])
+
+desc=ttk.Label(top_page_container, text="TimeZone :")
+desc.grid(column=1, row=0, sticky=W)
+desc.config(font=("Courier New", 12))
+
+zoneMenu = OptionMenu(top_page_container, time_zone, *timeZones)
+zoneMenu.config(width=20)
+zoneMenu.grid(column=2, row=0,sticky=W, pady=10)
+
+Button(top_page_container, text = 'Autofill Current DateTime', command = autofill).grid(row = 0, column = 3,sticky='E')
+
+
+middle_page_container = ttk.Frame(main_page, width= 500 ,height = universal_height)
+middle_page_container.grid(row=2,column=1, sticky=W)
+
+desc=ttk.Label(middle_page_container, text="Date:(DD/MM/YYYY)")
+desc.grid(column=1, row=1, sticky=W)
+desc.config(font=("Courier New", 12))
+date_entry = StringVar()
+d = Entry(middle_page_container,font=("Courier New", 12), textvariable = date_entry, width=10)
+d.grid(row = 1, column = 2, pady=20)
+month_entry = StringVar()
+m = Entry(middle_page_container,font=("Courier New", 12), textvariable = month_entry, width=10)
+m.grid(row = 1, column = 3, pady=20)
+year_entry = StringVar()
+y = Entry(middle_page_container,font=("Courier New", 12), textvariable = year_entry, width=10)
+y.grid(row = 1, column = 4, pady=20)
+
+desc=ttk.Label(middle_page_container,font=("Courier New", 12), text="Time:(HH:MM:SS.MSS)")
+desc.grid(column=1, row=2, sticky=W)
+desc.config(font=("Courier New", 12))
+hour_entry = StringVar()
+h = Entry(middle_page_container,font=("Courier New", 12), textvariable = hour_entry, width=10)
+h.grid(row = 2, column = 2, pady=20)
+min_entry = StringVar()
+mi = Entry(middle_page_container,font=("Courier New", 12), textvariable = min_entry, width=10)
+mi.grid(row = 2, column = 3, pady=20)
+second_entry = StringVar()
+se = Entry(middle_page_container,font=("Courier New", 12), textvariable = second_entry, width=10)
+se.grid(row = 2, column = 4, pady=20)
+ms_entry = StringVar()
+ms = Entry(middle_page_container,font=("Courier New", 12), textvariable = ms_entry, width=10)
+ms.grid(row = 2, column = 5, pady=20)
+now_naive = autofill()
+
+
+button_container = ttk.Frame(main_page, width = 200, height = universal_height)
+button_container.grid(row=5,column=1,sticky=E, pady=20)
+Button(button_container, text = 'Convert', command = convert).grid(row = 0, column = 0,sticky=W)
+
+
+bottom_page_container = ttk.Frame(main_page, width= 500 ,height = universal_height)
+bottom_page_container.grid(row=10,column=1, sticky=E)
+current=[(time_zone.get(),now_naive.strftime(fmt))]
+table = Table(bottom_page_container,len(current),len(current[0]),current) 
+
+####
+
+#epoch Page
+
+####
+
+epoch_page = ttk.Frame(nb, width= 500 ,height = universal_height)
+nb.add(epoch_page,text="Epoch Converter")
+
+e_top_page_container = ttk.Frame(epoch_page, width= 500 ,height = universal_height)
+e_top_page_container.grid(row=1,column=1, sticky=W)
+
+
+e_timeZones = favorites
+e_time_zone = StringVar()
+e_time_zone.set(favorites[0])
+
+desc=ttk.Label(e_top_page_container, text="TimeZone :")
+desc.grid(column=1, row=0, sticky=W)
+desc.config(font=("Courier New", 12))
+
+e_zoneMenu = OptionMenu(e_top_page_container, e_time_zone, *e_timeZones)
+e_zoneMenu.config(width=20)
+e_zoneMenu.grid(column=2, row=0,sticky=W, pady=10)
+
+Button(e_top_page_container, text = 'Current Epoch Timestamp', command = e_autofill).grid(row = 0, column = 3,sticky='E')
+
+
+desc=ttk.Label(e_top_page_container, text="Epoch Timestamp:")
+desc.grid(column=1, row=1, sticky=W)
+desc.config(font=("Courier New", 12))
+epoch_entry = StringVar()
+ep = Entry(e_top_page_container,font=("Courier New", 12), textvariable = epoch_entry, width=20)
+ep.grid(row = 1, column = 2, pady=20)
+e_autofill()
+
+button_container = ttk.Frame(epoch_page, width = 200, height = universal_height)
+button_container.grid(row=5,column=1,sticky=E, pady=20)
+Button(button_container, text = 'Convert', command = epoch_convert).grid(row = 0, column = 0,sticky=W)
+
+e_bottom_page_container = ttk.Frame(epoch_page, width= 500 ,height = universal_height)
+e_bottom_page_container.grid(row=10,column=1, sticky=W)
+current=[(time_zone.get(),now_naive.strftime(fmt))]
+e_table = Table(e_bottom_page_container,len(current),len(current[0]),current) 
+
+####
+
+#settings_page
+
+####
+
+settings_page = ttk.Frame(nb, width= 500 ,height = universal_height)
+nb.add(settings_page,text="Settings")
+
+
+favourites_container = ttk.Frame(settings_page, width= 500 ,height = universal_height)
+favourites_container.grid(row=1,column=1, sticky=W)
+
+desc=ttk.Label(favourites_container,font=("Courier New", 12), text="Please add your most used time zones:")
+desc.grid(column=1, row=0, sticky=W)
+desc.config(font=("Courier New", 12))
+
+search_container = ttk.Frame(favourites_container, width= 500 ,height = universal_height)
+search_container.grid(row=1,column=1, sticky=W)
+
+search_entry = StringVar()
+s = Entry(search_container,font=("Courier New", 12), textvariable = search_entry, width=10)
+s.grid(row = 1, column = 1, pady=20)
+
+Button(search_container, text = 'Search', command = search).grid(row = 1, column = 2,sticky='E')
+
+selection_container = ttk.Frame(favourites_container, width= 500 ,height = universal_height)
+selection_container.grid(row=2,column=1, sticky=W)
+
+desc=ttk.Label(selection_container,font=("Courier New", 12), text="All")
+desc.grid(column=1, row=0, sticky=W)
+desc.config(font=("Courier New", 12))
+
+all_container = ttk.Frame(selection_container, width= 500 ,height = universal_height)
+all_container.grid(row=1,column=1, sticky=W)
+
+scrollbar = Scrollbar(all_container)
+scrollbar.pack(side=RIGHT, fill=Y)
+
+listbox = Listbox(all_container,selectmode='multiple')
+listbox.pack()
+
+for zone in all_timezones:
+    listbox.insert(END, zone)
+
+listbox.config(yscrollcommand=scrollbar.set)
+scrollbar.config(command=listbox.yview)
+
+
+button_container = ttk.Frame(selection_container, width= 500 ,height = universal_height)
+button_container.grid(row=1,column=2, sticky='E')
+
+Button(button_container, text = 'Add', command = add).grid(row = 1, column = 2,sticky='E')
+Button(button_container, text = 'Sub', command = subtract).grid(row = 2, column = 2,sticky='E')
+
+desc=ttk.Label(selection_container,font=("Courier New", 12), text="Selected")
+desc.grid(column=3, row=0, sticky=W)
+desc.config(font=("Courier New", 12))
+
+selected_container = ttk.Frame(selection_container, width= 500 ,height = universal_height)
+selected_container.grid(row=1,column=3, sticky=W)
+
+sel_scrollbar = Scrollbar(selected_container)
+sel_scrollbar.pack(side=RIGHT, fill=Y)
+
+sel_listbox = Listbox(selected_container,selectmode='multiple')
+sel_listbox.pack()
+
+
+for i in favorites:
+    sel_listbox.insert(END, i)
+
+
+sel_listbox.config(yscrollcommand=sel_scrollbar.set)
+sel_scrollbar.config(command=sel_listbox.yview)
+
+
+
+root.mainloop()
