@@ -1,7 +1,7 @@
 import setuptools
 setuptools.setup(
      name='timeConverter',  
-     version='2.0',
+     version='2.2',
      scripts=['TimeConverter'] ,
      author="Kumari Aishwarya",
      author_email="k.aishwarya15@gmail.com",
@@ -12,4 +12,7 @@ setuptools.setup(
          "License :: OSI Approved :: MIT License",
          "Operating System :: OS Independent",
      ],
+     install_requires=[
+          'pytz'
+      ],
  )

@@ -3,12 +3,9 @@
 
 from tkinter import *
 from tkinter import ttk
-import os
-import json
 from datetime import datetime
 from pytz import timezone
 from pytz import all_timezones
-import os.path
 
 
 class Table: 
@@ -65,7 +62,7 @@ def convert():
     time_zone_value = time_zone.get()
     now_naive = datetime.now(timezone(time_zone_value))
     now_naive = now_naive.replace(day=int(d.get()),month=int(m.get()),year=int(y.get()),hour=int(h.get()),minute=int(mi.get()),second=int(se.get()),microsecond=int(ms.get()))
-    print(now_naive.strftime(fmt))
+    #print(now_naive.strftime(fmt))
 
     converted = []
     sel_indexes = sel_listbox.get(0,"end")
@@ -78,11 +75,11 @@ def convert():
 
     table.update(bottom_page_container,len(converted),len(converted[0]),converted) 
 
+
 def epoch_convert():
-    time_zone_value = time_zone.get()
     utc_timestamp = float(ep.get())
     utc_datetime = datetime.utcfromtimestamp(utc_timestamp)
-    print(utc_datetime)
+    #print(utc_datetime)
 
     converted = []
     sel_indexes = sel_listbox.get(0,"end")
@@ -124,7 +121,6 @@ def e_autofill():
 
 def search():
     data = search_entry.get()
-    search_item=''
     searched_items = []
 
     if data:
@@ -136,8 +132,6 @@ def search():
             listbox.delete(0,'end')
             for zone in searched_items:
                 listbox.insert(END, zone)
-        else: 
-            print('Item can not be found in the list!')
     else:
         listbox.delete(0,'end')
         for zone in all_timezones:
@@ -149,11 +143,11 @@ def add():
     sel_indexes = sel_listbox.get(0,"end")
     for i in indexes:
         cur = listbox.get(i)
-        print(cur)
+        #print(cur)
         if cur not in sel_indexes:
             sel_listbox.insert(END, cur)
     listbox.selection_clear(0, 'end')
-    print()
+    #print()
     updateSelectedIndexlist()
 
 
@@ -171,7 +165,7 @@ def subtract():
 def updateSelectedIndexlist():
     sel_indexes = sel_listbox.get(0,"end")
     sel_indexes_list = list(sel_indexes)
-    print(sel_indexes_list)
+    #print(sel_indexes_list)
     with open(filename, 'w') as f:
         f.write('\n'.join(sel_indexes_list))
 
@@ -180,12 +174,16 @@ def updateSelectedIndexlist():
     for i in sel_indexes_list:
         menu.add_command(label=i, 
                         command=lambda value=i: on_option_change(value))
+    if(not sel_indexes_list):
+        time_zone.set(sel_indexes_list[0])
 
     menu = e_zoneMenu["menu"]
     menu.delete(0, "end")
     for i in sel_indexes_list:
         menu.add_command(label=i, 
                         command=lambda value=i: on_option_change_e(value))
+    if(not sel_indexes_list):
+        e_time_zone.set(sel_indexes_list[0])
 
     
 def on_option_change(value):
@@ -212,7 +210,6 @@ universal_width = 500
 nb = ttk.Notebook(root)
 nb.grid(row=0)
 
-
 ####
 
 #main_page
@@ -234,11 +231,11 @@ desc=ttk.Label(top_page_container, text="TimeZone :")
 desc.grid(column=1, row=0, sticky=W)
 desc.config(font=("Courier New", 12))
 
-zoneMenu = OptionMenu(top_page_container, time_zone, *timeZones)
+zoneMenu = ttk.OptionMenu(top_page_container, time_zone, *timeZones)
 zoneMenu.config(width=20)
 zoneMenu.grid(column=2, row=0,sticky=W, pady=10)
 
-Button(top_page_container, text = 'Autofill Current DateTime', command = autofill).grid(row = 0, column = 3,sticky='E')
+ttk.Button(top_page_container, text = 'Autofill Current DateTime', command = autofill).grid(row = 0, column = 3,sticky='E')
 
 
 middle_page_container = ttk.Frame(main_page, width= 500 ,height = universal_height)
@@ -275,9 +272,9 @@ ms.grid(row = 2, column = 5, pady=20)
 now_naive = autofill()
 
 
-button_container = ttk.Frame(main_page, width = 200, height = universal_height)
-button_container.grid(row=5,column=1,sticky=E, pady=20)
-Button(button_container, text = 'Convert', command = convert).grid(row = 0, column = 0,sticky=W)
+ttk.Button_container = ttk.Frame(main_page, width = 200, height = universal_height)
+ttk.Button_container.grid(row=5,column=1,sticky=E, pady=20)
+ttk.Button(ttk.Button_container, text = 'Convert', command = convert).grid(row = 0, column = 0,sticky=W)
 
 
 bottom_page_container = ttk.Frame(main_page, width= 500 ,height = universal_height)
@@ -306,11 +303,11 @@ desc=ttk.Label(e_top_page_container, text="TimeZone :")
 desc.grid(column=1, row=0, sticky=W)
 desc.config(font=("Courier New", 12))
 
-e_zoneMenu = OptionMenu(e_top_page_container, e_time_zone, *e_timeZones)
+e_zoneMenu = ttk.OptionMenu(e_top_page_container, e_time_zone, *e_timeZones)
 e_zoneMenu.config(width=20)
 e_zoneMenu.grid(column=2, row=0,sticky=W, pady=10)
 
-Button(e_top_page_container, text = 'Current Epoch Timestamp', command = e_autofill).grid(row = 0, column = 3,sticky='E')
+ttk.Button(e_top_page_container, text = 'Current Epoch Timestamp', command = e_autofill).grid(row = 0, column = 3,sticky='E')
 
 
 desc=ttk.Label(e_top_page_container, text="Epoch Timestamp:")
@@ -321,9 +318,9 @@ ep = Entry(e_top_page_container,font=("Courier New", 12), textvariable = epoch_e
 ep.grid(row = 1, column = 2, pady=20)
 e_autofill()
 
-button_container = ttk.Frame(epoch_page, width = 200, height = universal_height)
-button_container.grid(row=5,column=1,sticky=E, pady=20)
-Button(button_container, text = 'Convert', command = epoch_convert).grid(row = 0, column = 0,sticky=W)
+ttk.Button_container = ttk.Frame(epoch_page, width = 200, height = universal_height)
+ttk.Button_container.grid(row=5,column=1,sticky=E, pady=20)
+ttk.Button(ttk.Button_container, text = 'Convert', command = epoch_convert).grid(row = 0, column = 0,sticky=W)
 
 e_bottom_page_container = ttk.Frame(epoch_page, width= 500 ,height = universal_height)
 e_bottom_page_container.grid(row=10,column=1, sticky=W)
@@ -354,7 +351,7 @@ search_entry = StringVar()
 s = Entry(search_container,font=("Courier New", 12), textvariable = search_entry, width=10)
 s.grid(row = 1, column = 1, pady=20)
 
-Button(search_container, text = 'Search', command = search).grid(row = 1, column = 2,sticky='E')
+ttk.Button(search_container, text = 'Search', command = search).grid(row = 1, column = 2,sticky='E')
 
 selection_container = ttk.Frame(favourites_container, width= 500 ,height = universal_height)
 selection_container.grid(row=2,column=1, sticky=W)
@@ -379,11 +376,11 @@ listbox.config(yscrollcommand=scrollbar.set)
 scrollbar.config(command=listbox.yview)
 
 
-button_container = ttk.Frame(selection_container, width= 500 ,height = universal_height)
-button_container.grid(row=1,column=2, sticky='E')
+ttk.Button_container = ttk.Frame(selection_container, width= 500 ,height = universal_height)
+ttk.Button_container.grid(row=1,column=2, sticky='E')
 
-Button(button_container, text = 'Add', command = add).grid(row = 1, column = 2,sticky='E')
-Button(button_container, text = 'Sub', command = subtract).grid(row = 2, column = 2,sticky='E')
+ttk.Button(ttk.Button_container, text = 'Add', command = add).grid(row = 1, column = 2,sticky='E')
+ttk.Button(ttk.Button_container, text = 'Sub', command = subtract).grid(row = 2, column = 2,sticky='E')
 
 desc=ttk.Label(selection_container,font=("Courier New", 12), text="Selected")
 desc.grid(column=3, row=0, sticky=W)
