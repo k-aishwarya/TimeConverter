@@ -1,4 +1,5 @@
 README.md
+README.rst
 TimeConverter
 setup.py
 timeConverter.egg-info/PKG-INFO
