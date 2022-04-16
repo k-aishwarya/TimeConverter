@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: timeConverter
-Version: 3.1
-Summary: A tool to convert time across time zones
+Version: 3.2
+Summary: A GUI tool to convert time across all time zones. To use this tool, just type 'timeConverter' on your terminal.
 Home-page: UNKNOWN
 Author: Kumari Aishwarya
 Author-email: k.aishwarya15@gmail.com
