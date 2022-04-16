@@ -57,6 +57,23 @@ except:
 
 fmt = "%Y-%m-%d %H:%M:%S.%f %Z%z"
 
+fmt2 = "%Y-%m-%dT%H:%M:%S.%f"
+
+def convert_utc():
+    time_zone_value = 'UTC'
+    now_naive = datetime.now(timezone(time_zone_value))
+    now_naive=datetime.strptime(timestamp.get(),fmt2)
+
+    converted = []
+    sel_indexes = sel_listbox.get(0,"end")
+    for i in sel_indexes:
+        new_time = now_naive.astimezone(timezone(i))
+        new_time_tuple = []
+        new_time_tuple.append(i)
+        new_time_tuple.append(new_time.strftime(fmt))
+        converted.append(new_time_tuple)
+
+    table.update(u_bottom_page_container,len(converted),len(converted[0]),converted) 
 
 def convert():
     time_zone_value = time_zone.get()
@@ -116,6 +133,13 @@ def e_autofill():
     now_timestamp = now_naive.timestamp()
     ep.delete(0, 'end')
     ep.insert(END, now_timestamp)
+    return now_naive
+
+def u_autofill():
+    now_naive = datetime.now(timezone('UTC'))
+    now_naive = now_naive.strftime(fmt2)
+    timestamp.delete(0, 'end')
+    timestamp.insert(END, now_naive)
     return now_naive
 
 
@@ -281,6 +305,54 @@ bottom_page_container = ttk.Frame(main_page, width= 500 ,height = universal_heig
 bottom_page_container.grid(row=10,column=1, sticky=E)
 current=[(time_zone.get(),now_naive.strftime(fmt))]
 table = Table(bottom_page_container,len(current),len(current[0]),current) 
+
+####
+
+#aws_page
+
+####
+
+
+utc_page = ttk.Frame(nb, width= 500 ,height = universal_height)
+nb.add(utc_page,text="UTC Time Converter")
+
+u_top_page_container = ttk.Frame(utc_page, width= 500 ,height = universal_height)
+u_top_page_container.grid(row=1,column=1, sticky=W)
+
+timeZones = favorites
+time_zone = StringVar()
+time_zone.set(favorites[0])
+
+u_desc=ttk.Label(u_top_page_container, text="TimeZone :")
+u_desc.grid(column=1, row=0, sticky=W)
+u_desc.config(font=("Courier New", 12))
+
+zoneMenu = ttk.OptionMenu(u_top_page_container, time_zone, *timeZones)
+zoneMenu.config(width=20)
+zoneMenu.grid(column=2, row=0,sticky=W, pady=10)
+
+ttk.Button(u_top_page_container, text = 'Autofill Current DateTime', command = u_autofill).grid(row = 0, column = 3,sticky='E')
+
+
+u_middle_page_container = ttk.Frame(utc_page, width= 500 ,height = universal_height)
+u_middle_page_container.grid(row=2,column=1, sticky=W)
+
+u_desc=ttk.Label(u_middle_page_container, text="Date:(YYYY-MM-DDTHH:MM:SS.MSS) Ex: 2022-01-24T04:00:45.987")
+u_desc.grid(column=1, row=1, sticky=W)
+u_desc.config(font=("Courier New", 12))
+timestamp_entry = StringVar()
+timestamp = Entry(u_middle_page_container,font=("Courier New", 12), textvariable = timestamp_entry, width=50)
+timestamp.grid(row = 2, column = 1, sticky=W)
+
+
+ttk.Button_container = ttk.Frame(utc_page, width = 200, height = universal_height)
+ttk.Button_container.grid(row=5,column=1,sticky=E, pady=20)
+ttk.Button(ttk.Button_container, text = 'Convert', command = convert_utc).grid(row = 0, column = 0,sticky=W)
+
+u_bottom_page_container = ttk.Frame(utc_page, width= 500 ,height = universal_height)
+u_bottom_page_container.grid(row=10,column=1, sticky=E)
+current=[(time_zone.get(),now_naive.strftime(fmt))]
+table = Table(u_bottom_page_container,len(current),len(current[0]),current) 
 
 ####
 
