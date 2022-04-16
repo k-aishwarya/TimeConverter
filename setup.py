@@ -1,7 +1,7 @@
 import setuptools
 setuptools.setup(
      name='timeConverter',  
-     version='3.0',
+     version='3.1',
      scripts=['TimeConverter'] ,
      author="Kumari Aishwarya",
      author_email="k.aishwarya15@gmail.com",
